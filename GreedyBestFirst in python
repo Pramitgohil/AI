@@ -1,0 +1,59 @@
+import heapq 
+# Node class to represent a point in the search space 
+class Node: 
+    def __init__(self, name, heuristic=0): 
+        self.name = name 
+        self.heuristic = heuristic  # Heuristic value (e.g., distance to goal) 
+        self.parent = None  # To trace the path back 
+    # Compare nodes based on their heuristic for priority queue 
+    def __lt__(self, other): 
+        return self.heuristic < other.heuristic 
+# Calculate the heuristic: Simple heuristic (for simplicity, predefined) 
+def calculate_heuristic(current, goal): 
+    # For simplicity, we're using a predefined heuristic for this example: 
+    heuristics = {"A": 3, "B": 2, "C": 1, "D": 3, "E": 2, "F": 2, "G": 0} 
+    return heuristics[current.name] 
+# Greedy BFS Algorithm 
+def greedy_bfs(start, goal, graph): 
+    open_list = [] 
+    closed_list = set() 
+    # Start with the initial node 
+    start.heuristic = calculate_heuristic(start, goal) 
+    heapq.heappush(open_list, start) 
+    while open_list: 
+        # Get the node with the smallest heuristic 
+        current_node = heapq.heappop(open_list) 
+        print(f"Visiting node {current_node.name} with heuristic {current_node.heuristic}") 
+        # Goal check 
+        if current_node.name == goal.name: 
+            # Reconstruct the path from start to goal 
+            path = [] 
+            while current_node: 
+                path.append(current_node.name) 
+                current_node = current_node.parent 
+            return path[::-1]  # Return the path reversed 
+        closed_list.add(current_node.name) 
+        # Expand the neighbors 
+        for neighbor in graph[current_node.name]: 
+            if neighbor.name not in closed_list: 
+                neighbor.heuristic = calculate_heuristic(neighbor, goal) 
+                neighbor.parent = current_node 
+                heapq.heappush(open_list, neighbor) 
+    return None  # No path found 
+# Define the graph (using neighbors only) 
+graph = { 
+    "A": [Node("B"), Node("C")], 
+    "B": [Node("A"), Node("D"), Node("E")], 
+    "C": [Node("A"), Node("F")], 
+    "D": [Node("B")], 
+    "E": [Node("B")], 
+    "F": [Node("C"), Node("G")], 
+    "G": [Node("F")] 
+} 
+# Goal Node 
+goal = Node("G") 
+# Start Node 
+start = Node("A") 
+# Run Greedy BFS 
+path = greedy_bfs(start, goal, graph) 
+print(f"Path to goal: {path}")

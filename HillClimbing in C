@@ -1,0 +1,79 @@
+//code in C
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+
+// Define the problem class (Example Problem)
+typedef struct {
+    int (*initial_state)(void);
+    int* (*get_neighbors)(int state, int* size);
+    int (*evaluate)(int state);
+} ExampleProblem;
+
+// Function to generate a random initial state
+int initial_state(void) {
+    return rand() % 21 - 10;  // Random integer between -10 and 10
+}
+
+// Function to generate neighbors of a state
+int* get_neighbors(int state, int* size) {
+    // Neighbors differ by 1 (state-1 and state+1)
+    int* neighbors = (int*)malloc(2 * sizeof(int));
+    neighbors[0] = state - 1;
+    neighbors[1] = state + 1;
+    *size = 2;  // We always have two neighbors
+    return neighbors;
+}
+
+// Example objective function to evaluate the state
+int evaluate(int state) {
+    return -state * state + 10;  // A simple quadratic function (-x^2 + 10)
+}
+
+// Hill climbing algorithm implementation
+int hill_climbing(ExampleProblem* problem) {
+    // Start with a random solution
+    int current = problem->initial_state();
+    printf("Starting at: %d\n", current);
+    
+    while (1) {
+        // Generate neighbors of the current state
+        int size = 0;
+        int* neighbors = problem->get_neighbors(current, &size);
+        
+        // Evaluate the neighbors
+        int next_state = current;
+        for (int i = 0; i < size; i++) {
+            printf("Evaluating neighbor %d: %d\n", neighbors[i], problem->evaluate(neighbors[i]));
+            if (problem->evaluate(neighbors[i]) > problem->evaluate(current)) {
+                next_state = neighbors[i];
+            }
+        }
+        
+        // If no better neighbor is found, we're at a local maximum
+        if (next_state == current) {
+            free(neighbors);
+            return current;
+        }
+        
+        // Move to the best neighbor
+        printf("Moving to %d\n", next_state);
+        current = next_state;
+        
+        free(neighbors); // Don't forget to free the allocated memory
+    }
+}
+
+int main() {
+    srand(time(0));  // Initialize random seed
+
+    // Create the problem
+    ExampleProblem problem = {initial_state, get_neighbors, evaluate};
+    
+    // Run hill climbing to find the solution
+    int solution = hill_climbing(&problem);
+    
+    printf("Solution found: %d\n", solution);
+    return 0;
+}

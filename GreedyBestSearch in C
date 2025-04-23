@@ -1,0 +1,180 @@
+//CODE IN C
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define MAX 100
+#define INF 9999
+
+// Node structure
+typedef struct Node {
+    char name;
+    int heuristic;
+    struct Node* parent;
+} Node;
+
+// Priority queue node
+typedef struct PQNode {
+    Node* node;
+    struct PQNode* next;
+} PQNode;
+
+typedef struct {
+    PQNode* front;
+} PriorityQueue;
+
+// Graph structure (adjacency list)
+typedef struct {
+    char name;
+    int numNeighbors;
+    Node* neighbors[10];
+} GraphNode;
+
+int calculate_heuristic(char name) {
+    switch(name) {
+        case 'A': return 3;
+        case 'B': return 2;
+        case 'C': return 1;
+        case 'D': return 3;
+        case 'E': return 2;
+        case 'F': return 2;
+        case 'G': return 0;
+        default: return INF;
+    }
+}
+
+// Create a new node
+Node* create_node(char name) {
+    Node* new_node = malloc(sizeof(Node));
+    new_node->name = name;
+    new_node->heuristic = calculate_heuristic(name);
+    new_node->parent = NULL;
+    return new_node;
+}
+
+// Priority Queue functions
+PriorityQueue* create_priority_queue() {
+    PriorityQueue* pq = malloc(sizeof(PriorityQueue));
+    pq->front = NULL;
+    return pq;
+}
+
+void enqueue(PriorityQueue* pq, Node* node) {
+    PQNode* new_pq_node = malloc(sizeof(PQNode));
+    new_pq_node->node = node;
+    new_pq_node->next = NULL;
+
+    if (pq->front == NULL || node->heuristic < pq->front->node->heuristic) {
+        new_pq_node->next = pq->front;
+        pq->front = new_pq_node;
+    } else {
+        PQNode* current = pq->front;
+        while (current->next != NULL && current->next->node->heuristic <= node->heuristic) {
+            current = current->next;
+        }
+        new_pq_node->next = current->next;
+        current->next = new_pq_node;
+    }
+}
+
+Node* dequeue(PriorityQueue* pq) {
+    if (pq->front == NULL) return NULL;
+    PQNode* temp = pq->front;
+    pq->front = pq->front->next;
+    Node* node = temp->node;
+    free(temp);
+    return node;
+}
+
+int is_empty(PriorityQueue* pq) {
+    return pq->front == NULL;
+}
+
+int is_in_set(char set[], int size, char value) {
+    for (int i = 0; i < size; i++) {
+        if (set[i] == value) return 1;
+    }
+    return 0;
+}
+
+// Greedy BFS
+void greedy_bfs(GraphNode graph[], int graph_size, char start, char goal) {
+    PriorityQueue* open_list = create_priority_queue();
+    char closed_list[MAX];
+    int closed_size = 0;
+
+    Node* start_node = create_node(start);
+    enqueue(open_list, start_node);
+
+    while (!is_empty(open_list)) {
+        Node* current = dequeue(open_list);
+        printf("Visiting node %c with heuristic %d\n", current->name, current->heuristic);
+
+        if (current->name == goal) {
+            printf("Path to goal: ");
+            Node* temp = current;
+            char path[MAX];
+            int path_len = 0;
+            while (temp) {
+                path[path_len++] = temp->name;
+                temp = temp->parent;
+            }
+            for (int i = path_len - 1; i >= 0; i--) {
+                printf("%c ", path[i]);
+            }
+            printf("\n");
+            return;
+        }
+
+        closed_list[closed_size++] = current->name;
+
+        // Find current node in graph
+        for (int i = 0; i < graph_size; i++) {
+            if (graph[i].name == current->name) {
+                for (int j = 0; j < graph[i].numNeighbors; j++) {
+                    Node* neighbor = create_node(graph[i].neighbors[j]->name);
+                    if (!is_in_set(closed_list, closed_size, neighbor->name)) {
+                        neighbor->parent = current;
+                        enqueue(open_list, neighbor);
+                    }
+                }
+                break;
+            }
+        }
+    }
+
+    printf("No path found.\n");
+}
+
+// Main function
+int main() {
+    // Define the graph manually
+    GraphNode graph[7];
+    char nodes[] = {'A', 'B', 'C', 'D', 'E', 'F', 'G'};
+
+    // Initialize nodes
+    for (int i = 0; i < 7; i++) {
+        graph[i].name = nodes[i];
+        graph[i].numNeighbors = 0;
+    }
+
+    // Add neighbors (Directed graph)
+    graph[0].neighbors[graph[0].numNeighbors++] = create_node('B'); // A
+    graph[0].neighbors[graph[0].numNeighbors++] = create_node('C');
+    graph[1].neighbors[graph[1].numNeighbors++] = create_node('A'); // B
+    graph[1].neighbors[graph[1].numNeighbors++] = create_node('D');
+    graph[1].neighbors[graph[1].numNeighbors++] = create_node('E');
+    graph[2].neighbors[graph[2].numNeighbors++] = create_node('A'); // C
+    graph[2].neighbors[graph[2].numNeighbors++] = create_node('F');
+    graph[3].neighbors[graph[3].numNeighbors++] = create_node('B'); // D
+    graph[4].neighbors[graph[4].numNeighbors++] = create_node('B'); // E
+    graph[5].neighbors[graph[5].numNeighbors++] = create_node('C'); // F
+    graph[5].neighbors[graph[5].numNeighbors++] = create_node('G');
+    graph[6].neighbors[graph[6].numNeighbors++] = create_node('F'); // G
+
+    // Run the search
+    greedy_bfs(graph, 7, 'A', 'G');
+
+    return 0;
+}

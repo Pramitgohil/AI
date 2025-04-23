@@ -1,0 +1,136 @@
+//BFS in C
+
+
+#include <stdio.h>
+#include <stdlib.h>
+
+#define MAX 100
+
+// Node for adjacency list
+typedef struct Node {
+    int vertex;
+    struct Node* next;
+} Node;
+
+// Queue structure
+typedef struct Queue {
+    int items[MAX];
+    int front, rear;
+} Queue;
+
+// Graph structure
+typedef struct Graph {
+    int numVertices;
+    Node** adjLists;
+    int* visited;
+} Graph;
+
+// Queue functions
+Queue* createQueue() {
+    Queue* q = malloc(sizeof(Queue));
+    q->front = q->rear = -1;
+    return q;
+}
+
+int isEmpty(Queue* q) {
+    return q->front == -1;
+}
+
+void enqueue(Queue* q, int value) {
+    if (q->rear == MAX - 1)
+        return;
+    if (isEmpty(q))
+        q->front = q->rear = 0;
+    else
+        q->rear++;
+    q->items[q->rear] = value;
+}
+
+int dequeue(Queue* q) {
+    if (isEmpty(q))
+        return -1;
+    int item = q->items[q->front];
+    if (q->front == q->rear)
+        q->front = q->rear = -1;
+    else
+        q->front++;
+    return item;
+}
+
+// Graph helper functions
+Node* createNode(int v) {
+    Node* newNode = malloc(sizeof(Node));
+    newNode->vertex = v;
+    newNode->next = NULL;
+    return newNode;
+}
+
+Graph* createGraph(int vertices) {
+    Graph* graph = malloc(sizeof(Graph));
+    graph->numVertices = vertices;
+    graph->adjLists = malloc(vertices * sizeof(Node*));
+    graph->visited = malloc(vertices * sizeof(int));
+
+    for (int i = 0; i < vertices; i++) {
+        graph->adjLists[i] = NULL;
+        graph->visited[i] = 0;
+    }
+
+    return graph;
+}
+
+// Add a directed edge (src -> dest)
+void addDirectedEdge(Graph* graph, int src, int dest) {
+    Node* newNode = createNode(dest);
+    if (graph->adjLists[src] == NULL) {
+        graph->adjLists[src] = newNode;
+    } else {
+        Node* temp = graph->adjLists[src];
+        while (temp->next != NULL) {
+            temp = temp->next;
+        }
+        temp->next = newNode;
+    }
+}
+
+
+// BFS traversal
+void bfs(Graph* graph, int startVertex) {
+    Queue* q = createQueue();
+
+    graph->visited[startVertex] = 1;
+    enqueue(q, startVertex);
+
+    while (!isEmpty(q)) {
+        int currentVertex = dequeue(q);
+        printf("%d ", currentVertex);
+
+        Node* temp = graph->adjLists[currentVertex];
+        while (temp) {
+            int adjVertex = temp->vertex;
+            if (graph->visited[adjVertex] == 0) {
+                graph->visited[adjVertex] = 1;
+                enqueue(q, adjVertex);
+            }
+            temp = temp->next;
+        }
+    }
+}
+
+int main() {
+    // 6 nodes: A=0, B=1, C=2, D=3, E=4, F=5
+    Graph* graph = createGraph(6);
+
+    // Directed edges matching Python graph
+    addDirectedEdge(graph, 0, 1); // A -> B
+    addDirectedEdge(graph, 0, 2); // A -> C
+    addDirectedEdge(graph, 1, 3); // B -> D
+    addDirectedEdge(graph, 1, 4); // B -> E
+    addDirectedEdge(graph, 2, 5); // C -> F
+    addDirectedEdge(graph, 4, 5); // E -> F
+
+    printf("BFS traversal starting from node A (0):\n");
+    bfs(graph, 0);
+
+    return 0;
+}

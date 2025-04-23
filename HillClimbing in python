@@ -1,0 +1,46 @@
+##PYHON CODE
+import random
+
+def hill_climbing(problem):
+    # Start with a random solution
+    current = problem.initial_state()
+    print("Starting at:", current)
+    
+    while True:
+        # Generate neighbors of the current state
+        neighbors = problem.get_neighbors(current)
+        
+        # Evaluate the neighbors
+        next_state = None
+        for neighbor in neighbors:
+            print(f"Evaluating neighbor {neighbor}: {problem.evaluate(neighbor)}")
+            if problem.evaluate(neighbor) > problem.evaluate(current):
+                next_state = neighbor
+        
+        # If no better neighbor is found, we're at a local maximum
+        if next_state is None:
+            return current
+        
+        # Move to the best neighbor
+        print(f"Moving to {next_state}")
+        current = next_state
+
+# Example problem class (to be used with the above hill_climbing function)
+class ExampleProblem:
+    def initial_state(self):
+        # Random initial state, for simplicity here we use a random integer
+        return random.randint(-10, 10)
+    
+    def get_neighbors(self, state):
+        # Neighbors are states that differ by 1
+        return [state - 1, state + 1]
+    
+    def evaluate(self, state):
+        # An example objective function: we want to maximize this
+        # In this case, it's a simple quadratic function: -x^2 + 10
+        return -state**2 + 10
+
+# Example usage
+problem = ExampleProblem()
+solution = hill_climbing(problem)
+print("Solution found:", solution)

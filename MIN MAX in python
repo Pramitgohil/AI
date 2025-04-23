@@ -1,0 +1,29 @@
+# Minimax Algorithm in python
+
+# Define a function for the Minimax algorithm
+def minimax(depth, nodeIndex, isMax, scores, h):
+    if depth == h:
+        return scores[nodeIndex]
+
+    if isMax:
+        best = -float('inf')
+        # Recur for left and right children
+        for i in range(2):
+            value = minimax(depth + 1, nodeIndex * 2 + i, False, scores, h)
+            best = max(best, value)
+        return best
+    else:
+        best = float('inf')
+        # Recur for left and right children
+        for i in range(2):
+            value = minimax(depth + 1, nodeIndex * 2 + i, True, scores, h)
+            best = min(best, value)
+        return best
+
+# Driver code
+if __name__ == "__main__":
+    scores = [3, 5, 6, 9]  # Leaf node scores
+    h = 2  # Height of the tree (root at depth 0, two levels below)
+
+    # The root is at depth 0, index 0, and it's Maximizer's turn
+    print("The optimal value is:", minimax(0, 0, True, scores, h))
